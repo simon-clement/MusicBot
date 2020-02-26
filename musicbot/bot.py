@@ -344,6 +344,18 @@ class MusicBot(discord.Client):
 
         return self.cached_app_info
 
+    async def add_to_autoplaylist(self, song_url:str, *, add_to_ap=False):
+        if song_url in self.autoplaylist:
+            log.debug("URL \"{}\" already in autoplaylist, ignoring".format(song_url))
+            return
+
+        async with self.aiolocks[_func_()]:
+            self.autoplaylist.append(song_url)
+            log.info("adding song to session autoplaylist: %s" % song_url)
+
+            if add_to_ap:
+                log.info("Updating autoplaylist")
+                write_file(self.config.auto_playlist_file, self.autoplaylist)
 
     async def remove_from_autoplaylist(self, song_url:str, *, ex:Exception=None, delete_from_ap=False):
         if song_url not in self.autoplaylist:
@@ -480,9 +492,11 @@ class MusicBot(discord.Client):
             elif self.config.now_playing_mentions:
                 newmsg = '%s - your song `%s` is now playing in `%s`!' % (
                     entry.meta['author'].mention, entry.title, player.voice_client.channel.name)
+                await self.add_to_autoplaylist(song_url=entry.url, add_to_ap=True)
             else:
                 newmsg = 'Now playing in `%s`: `%s` added by `%s`' % (
                     player.voice_client.channel.name, entry.title, entry.meta['author'].name)
+                await self.add_to_autoplaylist(song_url=entry.url, add_to_ap=True)
         else:
             # no author (and channel), it's an autoplaylist (or autostream from my other PR) entry.
             newmsg = 'Now playing automatically added entry `%s` in `%s`' % (
