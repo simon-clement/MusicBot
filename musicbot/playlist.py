@@ -3,6 +3,7 @@ import logging
 import datetime
 
 from random import shuffle
+from random import choice
 from itertools import islice
 from collections import deque
 
@@ -37,7 +38,25 @@ class Playlist(EventEmitter, Serializable):
         return len(self.entries)
 
     def shuffle(self):
-        shuffle(self.entries)
+        # first we construct a dictionnary with the authors as keys:
+        dic = {}
+        new_entries = deque()
+        for entry in self.entries:
+            author = entry.meta['author']
+            if author in dic:
+                dic[author] += [entry]
+            else:
+                dic[author] = [entry]
+        # Then we shuffle all the songs of each person
+        for key in dic:
+            shuffle(dic[key])
+        while dic:
+            author = choice(list(dic.keys()))
+            new_entries.append(dic[author].pop())
+            if not dic[author]:
+                dic.pop(author)
+
+        self.entries = new_entries
 
     def clear(self):
         self.entries.clear()
