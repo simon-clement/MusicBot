@@ -2004,6 +2004,16 @@ class MusicBot(discord.Client):
         await self.safe_delete_message(hand, quiet=True)
         return Response(self.str.get('cmd-shuffle-reply', "Shuffled `{0}`'s queue.").format(player.voice_client.channel.guild), delete_after=15)
 
+
+    async def cmd_remove_from_playlist(self, player, author):
+        """
+        Usage:
+            {command_prefix}remove_from_playlist
+
+        Delete the currently played song of the autoplaylist.
+        """
+        await self.remove_from_autoplaylist(player.current_entry.url, ex=None, delete_from_ap=True)
+
     async def cmd_clear(self, player, author):
         """
         Usage:
